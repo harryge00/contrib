@@ -19,19 +19,43 @@ if [ -z "$FILES_TO_COLLECT" ]; then
   exit 0
 fi
 
-for filepath in $FILES_TO_COLLECT
+read -ra filepaths <<< $FILES_TO_COLLECT
+read -ra containers <<< $CONTAINERS
+
+for i in ${!arr1[*]}
 do
-  filename=$(basename $filepath)
+  echo $i
+  echo ${arr1[i]} ${arr2[i]}
+done
+
+if [ ! ${#filepaths[@]} -eq ${#containers[@]} ]
+then
+  echo "ERROR: The number of containers is different from the number of files to collect."
+fi
+for i in ${!filepaths[*]}
+do
+  filename=$(basename ${filepaths[i]})
+  # dir=$(dirname $filepath)
+  # tag="file`echo $dir|sed 's/\//\./g'`.*"
   cat > "/etc/td-agent/files/${filename}" << EndOfMessage
 <source>
   type tail
   format none
   time_key time
-  path ${filepath}
+  path ${filepaths[i]}
   pos_file /etc/td-agent/fluentd-es.log.pos
   time_format %Y-%m-%dT%H:%M:%S
-  tag file.${filename}
+  tag kubernetes.${filename}.${POD_NAME}_${NAMESPACE_NAME}_${containers[i]}
   read_from_head true
 </source>
+
+<filter kubernetes.${filename}>
+@type record_transformer
+  enable_ruby true
+  auto_typecast true
+  <record>
+    kubernetes \${{"pod_name" => "$POD_NAME", "namespace_name" => "$NAMESPACE_NAME", "container_name" => "${containers[i]}"}}
+  </record>
+</filter>
 EndOfMessage
 done
