@@ -49,7 +49,7 @@ do
   read_from_head true
 </source>
 
-<filter kubernetes.${filename}>
+<filter kubernetes.${filename}.*>
 @type record_transformer
   enable_ruby true
   auto_typecast true
