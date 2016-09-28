@@ -22,21 +22,29 @@ fi
 read -ra filepaths <<< $FILES_TO_COLLECT
 read -ra containers <<< $CONTAINERS
 
-for i in ${!arr1[*]}
-do
-  echo $i
-  echo ${arr1[i]} ${arr2[i]}
-done
-
 if [ ! ${#filepaths[@]} -eq ${#containers[@]} ]
 then
   echo "ERROR: The number of containers is different from the number of files to collect."
 fi
+
+declare -A names_count
+
+function get_uncollided_name {
+  next_name=$1
+  base_name=$1
+  while [ ${names_count[$next_name]} ];
+  do
+    ((names_count[$base_name]++))
+    next_name=${base_name}_${names_count[$base_name]}
+  done
+  names_count+=([$next_name]=1)
+}
+
 for i in ${!filepaths[*]}
 do
   filename=$(basename ${filepaths[i]})
-  # dir=$(dirname $filepath)
-  # tag="file`echo $dir|sed 's/\//\./g'`.*"
+  get_uncollided_name $filename
+  filename=$next_name
   cat > "/etc/td-agent/files/${filename}" << EndOfMessage
 <source>
   type tail
