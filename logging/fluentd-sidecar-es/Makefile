@@ -1,9 +1,9 @@
 .PHONY:	build push
 
-TAG = 1.2
+TAG = v0.0.1
 
 build:
-	docker build -t gcr.io/google_containers/fluentd-sidecar-es:$(TAG) .
+	docker build -t cargo.caicloud.io/caicloud/fluentd-sidecar-es:$(TAG) .
 
 push:
-	gcloud docker push gcr.io/google_containers/fluentd-sidecar-es:$(TAG)
+	gcloud docker push cargo.caicloud.io/caicloud/fluentd-sidecar-es:$(TAG)
